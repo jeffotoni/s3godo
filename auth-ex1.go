@@ -6,8 +6,6 @@ package main
 
 import (
 	"context"
-	"fmt"
-	"log"
 	"os"
 
 	"github.com/digitalocean/godo"
@@ -30,36 +28,11 @@ func (t *TokenSource) Token() (*oauth2.Token, error) {
 }
 
 func main() {
+
 	tokenSource := &TokenSource{
 		AccessToken: pat,
 	}
 
 	oauthClient := oauth2.NewClient(context.Background(), tokenSource)
 	client := godo.NewClient(oauthClient)
-
-	fmt.Println("auth ok")
-	// fmt.Println(client)
-
-	fmt.Println("...........................")
-
-	fmt.Println("Lista all Droplets")
-
-	ctx := context.TODO()
-
-	opt := &godo.ListOptions{
-		Page:    1,
-		PerPage: 200,
-	}
-
-	droplets, _, err := client.Droplets.List(ctx, opt)
-	if err != nil {
-		log.Println(err)
-	}
-
-	for _, v := range droplets {
-		fmt.Println("Id: ", v.ID)
-		fmt.Println("Name: ", v.Name)
-		fmt.Println("Memory: ", v.Memory)
-	}
-
 }

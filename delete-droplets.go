@@ -40,12 +40,12 @@ func main() {
 	// fmt.Println(client)
 
 	fmt.Println("...........................")
+
 	fmt.Println("Del Droplets")
 
 	ctx := context.TODO()
 
-	_, err := client.Droplets.Delete(ctx, 1025)
-
+	_, err := client.Droplets.Delete(ctx, xxxxxxxxxxx)
 	if err != nil {
 		fmt.Println(err)
 	}

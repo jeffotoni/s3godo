@@ -41,8 +41,9 @@ func main() {
 	// fmt.Println(client)
 
 	fmt.Println("###################################")
+
 	fmt.Println("Create new Droplet.")
-	dropletName := "super-cool-jeff-droplet"
+	dropletName := "super-cool-dit10-droplet"
 
 	createRequest := &godo.DropletCreateRequest{
 		Name:   dropletName,
@@ -52,14 +53,12 @@ func main() {
 			Slug: "ubuntu-18-04-x64",
 		},
 		SSHKeys: []godo.DropletCreateSSHKey{
-			{Fingerprint: "3d:c9:31:d4:4d:58:3a:66:ea:ff:d2:34:b9:c8:e9:36"},
+			{Fingerprint: "7d:c1:35:d1:2d:90:2a:16:ec:ff:d1:22:b8:c7:e2:27"},
 		},
 	}
 
 	ctx := context.TODO()
-
 	newDroplet, _, err := client.Droplets.Create(ctx, createRequest)
-
 	if err != nil {
 		fmt.Printf("Something bad happened: %s\n\n", err)
 		return
