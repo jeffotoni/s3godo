@@ -9,10 +9,13 @@ import (
     "github.com/aws/aws-sdk-go/aws/credentials"
     "github.com/aws/aws-sdk-go/aws/session"
     "github.com/aws/aws-sdk-go/service/s3"
+    . "github.com/jeffotoni/gcolor"
     "io/ioutil"
     "net/http"
     "os"
+    "os/signal"
     "strings"
+    "time"
 )
 
 const (
@@ -116,6 +119,9 @@ func main() {
         return
     }
 
+    // runer
+    timer := RunerTimer()
+
     //nome de arquivo...
     pathV := strings.Split(*pathFile, "/")
     lastp := len(pathV)
@@ -135,6 +141,9 @@ func main() {
         return
     }
 
+    <-timer
+    fmt.Print("\r")
+    fmt.Print("\033[?25h")
     fmt.Println("Enviando com sucesso!")
     fmt.Println(msgs3)
 }
@@ -186,4 +195,42 @@ func GetFileContentType(out *os.File) (string, error) {
     // content-type by returning "application/octet-stream" if no others seemed to match.
     contentType := http.DetectContentType(buffer)
     return contentType, nil
+}
+
+func RunerTimer() <-chan time.Time {
+
+    timer := time.Tick(time.Duration(50) * time.Millisecond)
+
+    go func() {
+        sc := make(chan os.Signal, 1)
+        signal.Notify(sc, os.Interrupt)
+
+        <-sc
+
+        fmt.Print(RedCor("\ncanceled!"))
+        fmt.Print("\033[?25h")
+        os.Exit(0)
+    }()
+
+    fmt.Print("\033[?25l")
+
+    s := []rune(`|/~\`)
+    //s := []rune(`-=*=`)
+    //s := []rune(`◐◓◑◒`)
+    i := 0
+
+    go func() {
+        for {
+
+            <-timer
+            fmt.Print("\r")
+            fmt.Print(YellowCor(string(s[i])))
+            i++
+            if i == len(s) {
+                i = 0
+            }
+        }
+    }()
+
+    return timer
 }
