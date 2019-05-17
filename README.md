@@ -1,6 +1,6 @@
 # s3godo
-client Digital Ocean in Go
 
+client Digital Ocean in Go
 
 Godo is a sdk, a client so we can work natively using Go.
 The lib is very light and lean, we managed to handle via API all the features we have in Cloud DigitalOcean.
@@ -13,6 +13,8 @@ The API is fantastic, network latency makes it all work like a rocket.
 
 The programs in Go fit like a glove due to its simplicity and performance, consuming little hardwares we have lean costs for our projects.
 
+
+Example of how to connect to DigitalOcean using Godo:
 
 ```go
 
@@ -50,4 +52,60 @@ func main() {
 	oauthClient := oauth2.NewClient(context.Background(), tokenSource)
 	client := godo.NewClient(oauthClient)
 }
+```
+## DROPLET
+
+```go
+
+...
+mt.Println("Create new Droplet.")
+dropletName := "super-cool-dit10-droplet"
+createRequest := &godo.DropletCreateRequest{
+		Name:   dropletName,
+		Region: "nyc1",
+		Size:   "s-1vcpu-1gb",
+		Image: godo.DropletCreateImage{
+			Slug: "ubuntu-18-04-x64",
+		},
+		SSHKeys: []godo.DropletCreateSSHKey{
+			{Fingerprint: "7d:c1:35:d1:2d:90:2a:16:ec:ff:d1:22:b8:c7:e2:27"},
+		},
+	}
+...
+
+```
+
+## SPACES
+To access space, we will not use godo to use sdk aws.
+in the simple space will find the source of the copyspace a program that will send files to the space.
+
+
+To access space, we will not use godo to use sdk aws.
+in the simple space will find the source of the copyspace a program that will send files to the space.
+
+For copyspace to work you need to generate a json file with the hidden .dokeys name in your $HOME, and its contents are:
+
+```bash
+$ echo "
+{
+     "key": "key-digitalocean",
+     "secret": "secret-digitalocean",
+     "endpoint": "https://your-space.digitaloceanspaces.com",
+     "region": "us-east-1",
+     "bucket": "your-bucket-default"
+} " > $HOME/.dokeys
+```
+
+The bucket field is not required, and the keys you will be able to generate from the DigitalOcean control panel in Spaces access keys at https://cloud.digitalocean.com
+
+It is now install and use.
+
+```bash
+$ go install
+
+# The parameters are:
+# file: filename
+# acl: public or private
+# bucket: the name of your bucket
+$ copyspace --file = your-file.pdf --acl = public --bucket = your-bucket
 ```
