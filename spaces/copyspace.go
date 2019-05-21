@@ -91,37 +91,55 @@ func main() {
 
     if DirExist(pathFile) {
 
+        type sendS3 struct {
+            Path     string
+            Pbucket  string
+            S3Client *s3.S3
+        }
+
+        c := make(chan sendS3)
+
         dir := pathFile
-        // recursive
-        // if for diretorio
-        // varrer toda arvore e enviar
-        err := filepath.Walk(dir,
-            func(path string, info os.FileInfo, err error) error {
-                if err != nil {
-                    return err
-                }
 
-                //fmt.Println(path, info.Size())
-                p := path
-                // send one file
-                SendFileDo(p, s3Client)
+        go func() {
+            err := filepath.Walk(dir,
+                func(path string, info os.FileInfo, err error) error {
+                    if err != nil {
+                        return err
+                    }
+                    // buckewt
+                    pbucket := strings.Replace(path, os.Getenv("HOME"), "", -1)
+                    // SendFileDo(path, pbucket, s3Client)
+                    cy := sendS3{Path: path, Pbucket: pbucket, S3Client: s3Client}
+                    c <- cy
 
-                return nil
-            })
-        if err != nil {
-            fmt.Println(err)
+                    return nil
+                })
+            if err != nil {
+                fmt.Println(err)
+            }
+        }()
+
+        defer close(c)
+
+        for cx := range c {
+            SendFileDo(cx.Path, cx.Pbucket, cx.S3Client)
         }
 
         return
+
     } else {
 
+        // bucket
+        pbucket := strings.Replace(pathFile, os.Getenv("HOME"), "", -1)
         p := pathFile
+
         // send one file
-        SendFileDo(p, s3Client)
+        SendFileDo(p, pbucket, s3Client)
     }
 }
 
-func SendFileDo(pf string, s3Client *s3.S3) {
+func SendFileDo(pf, pbucket string, s3Client *s3.S3) {
 
     f, err := os.Open(pf)
     if err != nil {
@@ -172,13 +190,11 @@ func SendFileDo(pf string, s3Client *s3.S3) {
     var cfs = make(chan Fs)
 
     var wg = &sync.WaitGroup{}
-
     wg.Add(1)
     // aqui deveria ter um worker
-    go func(pf string, b, contentType string) {
-
-        //var err error
-        //nome de arquivo...
+    go func(pf, b, contentType string) {
+        //println(pf)
+        wg.Done()
         pathV := strings.Split(pf, "/")
         lastp := len(pathV)
         nameFileSpace := pathV[lastp-1]
@@ -188,26 +204,18 @@ func SendFileDo(pf string, s3Client *s3.S3) {
             ACL:         aws.String(ACL_AP),
             Body:        strings.NewReader(b),
             Bucket:      aws.String(BUCKET),
-            Key:         aws.String(nameFileSpace),
+            Key:         aws.String(pbucket),
             ContentType: aws.String(contentType),
         }
-
         msgs3V, err := s3Client.PutObject(&object)
         if err != nil {
             fmt.Println(err.Error())
             return
         }
-        wg.Done()
-
-        //msgs3 <- msgs3V.ETag
-
         cfs <- Fs{Msgs3: msgs3V.ETag, Name: nameFileSpace, Size: fi.Size()}
         close(cfs)
-
         time.Sleep(time.Millisecond * 30)
-
     }(pf, bs, contentType)
-
     wg.Wait()
 
     <-timer
@@ -217,9 +225,10 @@ func SendFileDo(pf string, s3Client *s3.S3) {
 
     fmt.Print("\r")
     fmt.Print("\033[?25h")
-    fmt.Print("\nEnviando com sucesso!")
-    fmt.Println("Id do Envio: ", csfS.Msgs3, "File: ", csfS.Name, "Size: ", kb, "Kb")
-
+    fmt.Println("[send success] Id do Envio: ", *csfS.Msgs3, "File: ", csfS.Name, "Size: ", kb, "Kb")
+    fmt.Print("\r")
+    fmt.Print("\033[?25h")
+    fmt.Print("\033[?25h")
 }
 
 func DirExist(path string) bool {
