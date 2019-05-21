@@ -114,19 +114,16 @@ func main() {
             if err != nil {
                 fmt.Println(err)
             } else {
+                close(c)
                 done <- "fim de envio"
             }
         }()
 
-        defer close(c)
-        //go func() {
-        //cx := <-c
         for cx := range c {
-            go SendFileDo(cx.Path, cx.Pbucket, cx.S3Client)
+            SendFileDo(cx.Path, cx.Pbucket, cx.S3Client)
         }
-        //}()
-        println(<-done)
 
+        println(<-done)
         return
 
     } else {
@@ -142,6 +139,7 @@ func main() {
 
 func SendFileDo(pf, pbucket string, s3Client *s3.S3) {
 
+    t1 := time.Now()
     f, err := os.Open(pf)
     if err != nil {
         fmt.Print(err)
@@ -215,21 +213,23 @@ func SendFileDo(pf, pbucket string, s3Client *s3.S3) {
         }
         cfs <- Fs{Msgs3: msgs3V.ETag, Name: nameFileSpace, Size: fi.Size()}
         close(cfs)
-        time.Sleep(time.Millisecond * 30)
+        time.Sleep(time.Millisecond * 10)
     }(pf, bs, contentType)
-    wg.Wait()
 
+    wg.Wait()
     <-timer
 
     csfS := <-cfs
     kb := (csfS.Size / 1024)
+    t2 := time.Now()
 
     fmt.Print("\r")
     fmt.Print("\033[?25h")
-    fmt.Println("[send success] Id do Envio: ", *csfS.Msgs3, "File: ", csfS.Name, "Size: ", kb, "Kb")
+    fmt.Println("[send success] Id["+*csfS.Msgs3+"] File["+csfS.Name+"] Size[", kb, "Kb]", "time[", t2.Sub(t1), "]")
     fmt.Print("\r")
     fmt.Print("\033[?25h")
     fmt.Print("\033[?25h")
+    return
 }
 
 func DirExist(path string) bool {
