@@ -98,33 +98,34 @@ func main() {
         }
 
         c := make(chan sendS3)
-
+        done := make(chan string)
         dir := pathFile
-
         go func() {
             err := filepath.Walk(dir,
                 func(path string, info os.FileInfo, err error) error {
                     if err != nil {
                         return err
                     }
-                    // buckewt
                     pbucket := strings.Replace(path, os.Getenv("HOME"), "", -1)
-                    // SendFileDo(path, pbucket, s3Client)
                     cy := sendS3{Path: path, Pbucket: pbucket, S3Client: s3Client}
                     c <- cy
-
                     return nil
                 })
             if err != nil {
                 fmt.Println(err)
+            } else {
+                done <- "fim de envio"
             }
         }()
 
         defer close(c)
-
+        //go func() {
+        //cx := <-c
         for cx := range c {
-            SendFileDo(cx.Path, cx.Pbucket, cx.S3Client)
+            go SendFileDo(cx.Path, cx.Pbucket, cx.S3Client)
         }
+        //}()
+        println(<-done)
 
         return
 
