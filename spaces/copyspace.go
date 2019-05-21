@@ -14,7 +14,9 @@ import (
     "net/http"
     "os"
     "os/signal"
+    "path/filepath"
     "strings"
+    "sync"
     "time"
 )
 
@@ -64,13 +66,15 @@ func main() {
     s3Client := s3.New(newSession)
 
     // agora capturando dados..
+    var pathFile string
 
-    pathFile := flag.String("file", "", "nome do arquivo a ser enviado")
+    //pathFile := flag.String("file", "", "nome do arquivo ou diretorio a ser enviado")
+    flag.StringVar(&pathFile, "file", "", "nome do arquivo ou diretorio a ser enviado")
     aclSend := flag.String("acl", "", "permissao: public or private")
     fbucket := flag.String("bucket", "", "o nome do seu bucket")
     flag.Parse()
 
-    if len(*pathFile) == 0 {
+    if len(pathFile) == 0 {
         flag.PrintDefaults()
         return
     }
@@ -85,7 +89,41 @@ func main() {
         BUCKET = bucket
     }
 
-    f, err := os.Open(*pathFile)
+    if DirExist(pathFile) {
+
+        dir := pathFile
+        // recursive
+        // if for diretorio
+        // varrer toda arvore e enviar
+        err := filepath.Walk(dir,
+            func(path string, info os.FileInfo, err error) error {
+                if err != nil {
+                    return err
+                }
+
+                //fmt.Println(path, info.Size())
+                p := path
+                // send one file
+                SendFileDo(p, s3Client)
+
+                return nil
+            })
+        if err != nil {
+            fmt.Println(err)
+        }
+
+        return
+    } else {
+
+        p := pathFile
+        // send one file
+        SendFileDo(p, s3Client)
+    }
+}
+
+func SendFileDo(pf string, s3Client *s3.S3) {
+
+    f, err := os.Open(pf)
     if err != nil {
         fmt.Print(err)
         return
@@ -93,11 +131,11 @@ func main() {
     defer f.Close()
 
     // size file...
-    // fi, err := f.Stat()
-    // if err != nil {
-    //     fmt.Println(err)
-    //     return
-    // }
+    fi, err := f.Stat()
+    if err != nil {
+        fmt.Println(err)
+        return
+    }
 
     //// Use bufio.NewReader to get a Reader.
     // ... Then use ioutil.ReadAll to read the entire content.
@@ -119,33 +157,79 @@ func main() {
         return
     }
 
+    bs := string(b)
+
     // runer
     timer := RunerTimer()
 
-    //nome de arquivo...
-    pathV := strings.Split(*pathFile, "/")
-    lastp := len(pathV)
-    nameFileSpace := pathV[lastp-1]
+    type Fs struct {
+        Msgs3 *string
+        Name  string
+        Size  int64
+    }
 
-    // Upload a file to the Space
-    object := s3.PutObjectInput{
-        ACL:         aws.String(ACL_AP),
-        Body:        strings.NewReader(string(b)),
-        Bucket:      aws.String(BUCKET),
-        Key:         aws.String(nameFileSpace),
-        ContentType: aws.String(contentType),
-    }
-    msgs3, err := s3Client.PutObject(&object)
-    if err != nil {
-        fmt.Println(err.Error())
-        return
-    }
+    //var msgs3 = make(chan *string)
+    var cfs = make(chan Fs)
+
+    var wg = &sync.WaitGroup{}
+
+    wg.Add(1)
+    // aqui deveria ter um worker
+    go func(pf string, b, contentType string) {
+
+        //var err error
+        //nome de arquivo...
+        pathV := strings.Split(pf, "/")
+        lastp := len(pathV)
+        nameFileSpace := pathV[lastp-1]
+
+        // Upload a file to the Space
+        object := s3.PutObjectInput{
+            ACL:         aws.String(ACL_AP),
+            Body:        strings.NewReader(b),
+            Bucket:      aws.String(BUCKET),
+            Key:         aws.String(nameFileSpace),
+            ContentType: aws.String(contentType),
+        }
+
+        msgs3V, err := s3Client.PutObject(&object)
+        if err != nil {
+            fmt.Println(err.Error())
+            return
+        }
+        wg.Done()
+
+        //msgs3 <- msgs3V.ETag
+
+        cfs <- Fs{Msgs3: msgs3V.ETag, Name: nameFileSpace, Size: fi.Size()}
+        close(cfs)
+
+        time.Sleep(time.Millisecond * 30)
+
+    }(pf, bs, contentType)
+
+    wg.Wait()
 
     <-timer
+
+    csfS := <-cfs
+    kb := (csfS.Size / 1024)
+
     fmt.Print("\r")
     fmt.Print("\033[?25h")
-    fmt.Println("Enviando com sucesso!")
-    fmt.Println(msgs3)
+    fmt.Print("\nEnviando com sucesso!")
+    fmt.Println("Id do Envio: ", csfS.Msgs3, "File: ", csfS.Name, "Size: ", kb, "Kb")
+
+}
+
+func DirExist(path string) bool {
+
+    //if _, err := os.Stat(path); err == nil {
+    if stat, err := os.Stat(path); err == nil && stat.IsDir() {
+        return true
+    }
+
+    return false
 }
 
 func ReadKey() (endpoint, region, bucket, key, secret string, err error) {
