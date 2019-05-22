@@ -109,7 +109,7 @@ func main() {
         var i int
         //wg.Add(5)
         // inicia o worker
-        for w := 1; w <= 3; w++ {
+        for w := 1; w <= 1000; w++ {
             go worker(w, jobs, results)
         }
 
