@@ -89,6 +89,8 @@ func main() {
         BUCKET = bucket
     }
 
+    var wg sync.WaitGroup
+
     if DirExist(pathFile) {
 
         type sendS3 struct {
@@ -97,7 +99,7 @@ func main() {
             S3Client *s3.S3
         }
 
-        c := make(chan sendS3)
+        //c := make(chan sendS3)
         done := make(chan string)
         dir := pathFile
         go func() {
@@ -107,21 +109,27 @@ func main() {
                         return err
                     }
                     pbucket := strings.Replace(path, os.Getenv("HOME"), "", -1)
-                    cy := sendS3{Path: path, Pbucket: pbucket, S3Client: s3Client}
-                    c <- cy
+                    //cy := sendS3{Path: path, Pbucket: pbucket, S3Client: s3Client}
+                    //c <- cy
+
+                    wg.Add(1)
+                    SendFileDo(cx.Path, cx.Pbucket, cx.S3Client, &wg)
                     return nil
                 })
             if err != nil {
                 fmt.Println(err)
-            } else {
-                close(c)
-                done <- "fim de envio"
             }
+            //else {
+            //close(c)
+            //done <- "fim de envio"
+            //}
         }()
 
-        for cx := range c {
-            SendFileDo(cx.Path, cx.Pbucket, cx.S3Client)
-        }
+        wg.Wait()
+
+        // for cx := range c {
+        //     SendFileDo(cx.Path, cx.Pbucket, cx.S3Client)
+        // }
 
         println(<-done)
         return
@@ -132,12 +140,13 @@ func main() {
         pbucket := strings.Replace(pathFile, os.Getenv("HOME"), "", -1)
         p := pathFile
 
-        // send one file
-        SendFileDo(p, pbucket, s3Client)
+        wg.Add(1)
+        SendFileDo(p, pbucket, s3Client, &wg) // send one file
+        wg.Wait()
     }
 }
 
-func SendFileDo(pf, pbucket string, s3Client *s3.S3) {
+func SendFileDo(pf, pbucket string, s3Client *s3.S3, wg *sync.WaitGroup) {
 
     t1 := time.Now()
     f, err := os.Open(pf)
@@ -188,10 +197,10 @@ func SendFileDo(pf, pbucket string, s3Client *s3.S3) {
     //var msgs3 = make(chan *string)
     var cfs = make(chan Fs)
 
-    var wg = &sync.WaitGroup{}
-    wg.Add(1)
+    //var wg = &sync.WaitGroup{}
+    //wg.Add(1)
     // aqui deveria ter um worker
-    go func(pf, b, contentType string) {
+    func(pf, b, contentType string) {
         //println(pf)
         wg.Done()
         pathV := strings.Split(pf, "/")
@@ -216,7 +225,7 @@ func SendFileDo(pf, pbucket string, s3Client *s3.S3) {
         time.Sleep(time.Millisecond * 10)
     }(pf, bs, contentType)
 
-    wg.Wait()
+    //wg.Wait()
     <-timer
 
     csfS := <-cfs
