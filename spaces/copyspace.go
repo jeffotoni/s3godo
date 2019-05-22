@@ -100,9 +100,9 @@ func main() {
         }
 
         //c := make(chan sendS3)
-        done := make(chan string)
+        done := make(chan string, 1)
         dir := pathFile
-        go func() {
+        func() {
             err := filepath.Walk(dir,
                 func(path string, info os.FileInfo, err error) error {
                     if err != nil {
@@ -111,26 +111,25 @@ func main() {
                     pbucket := strings.Replace(path, os.Getenv("HOME"), "", -1)
                     //cy := sendS3{Path: path, Pbucket: pbucket, S3Client: s3Client}
                     //c <- cy
-
                     wg.Add(1)
-                    SendFileDo(cx.Path, cx.Pbucket, cx.S3Client, &wg)
+                    go SendFileDo(path,
+                        pbucket,
+                        s3Client,
+                        &wg,
+                    )
+
                     return nil
                 })
             if err != nil {
                 fmt.Println(err)
             }
-            //else {
-            //close(c)
-            //done <- "fim de envio"
-            //}
         }()
-
+        done <- "fim de envio"
         wg.Wait()
 
         // for cx := range c {
         //     SendFileDo(cx.Path, cx.Pbucket, cx.S3Client)
         // }
-
         println(<-done)
         return
 
@@ -141,17 +140,27 @@ func main() {
         p := pathFile
 
         wg.Add(1)
-        SendFileDo(p, pbucket, s3Client, &wg) // send one file
+        go SendFileDo(p, pbucket, s3Client, &wg) // send one file
         wg.Wait()
     }
 }
 
+func SendFileDoTest(pf, pbucket string, s3Client *s3.S3, wg *sync.WaitGroup) {
+    time.Sleep(time.Second)
+    println(pbucket)
+    defer wg.Done()
+}
+
 func SendFileDo(pf, pbucket string, s3Client *s3.S3, wg *sync.WaitGroup) {
 
+    defer wg.Done()
+
+    // time.Sleep(time.Second)
     t1 := time.Now()
     f, err := os.Open(pf)
     if err != nil {
         fmt.Print(err)
+        //wg.Done()
         return
     }
     defer f.Close()
@@ -160,6 +169,7 @@ func SendFileDo(pf, pbucket string, s3Client *s3.S3, wg *sync.WaitGroup) {
     fi, err := f.Stat()
     if err != nil {
         fmt.Println(err)
+        //wg.Done()
         return
     }
 
@@ -169,17 +179,20 @@ func SendFileDo(pf, pbucket string, s3Client *s3.S3, wg *sync.WaitGroup) {
     b, err := ioutil.ReadAll(reader)
     if err != nil {
         fmt.Println("readAll:", err)
+        //wg.Done()
         return
     }
 
     contentType, err := GetFileContentType(f)
     if err != nil {
         fmt.Println("contentType: ", err)
+        //wg.Done()
         return
     }
 
     if len(string(b)) == 0 {
         fmt.Println("Error file está vazio..")
+        //wg.Done()
         return
     }
 
@@ -195,14 +208,15 @@ func SendFileDo(pf, pbucket string, s3Client *s3.S3, wg *sync.WaitGroup) {
     }
 
     //var msgs3 = make(chan *string)
-    var cfs = make(chan Fs)
+    var cfs = make(chan Fs, 1)
+    //var wg2 = &sync.WaitGroup{}
+    //wg2.Add(1)
+    <-timer
 
-    //var wg = &sync.WaitGroup{}
-    //wg.Add(1)
     // aqui deveria ter um worker
-    func(pf, b, contentType string) {
+    go func(pf, b, contentType string) {
         //println(pf)
-        wg.Done()
+        //defer wg2.Done()
         pathV := strings.Split(pf, "/")
         lastp := len(pathV)
         nameFileSpace := pathV[lastp-1]
@@ -221,13 +235,12 @@ func SendFileDo(pf, pbucket string, s3Client *s3.S3, wg *sync.WaitGroup) {
             return
         }
         cfs <- Fs{Msgs3: msgs3V.ETag, Name: nameFileSpace, Size: fi.Size()}
-        close(cfs)
-        time.Sleep(time.Millisecond * 10)
+        //defer close(cfs)
+        time.Sleep(time.Millisecond * 1)
     }(pf, bs, contentType)
+    //wg2.Wait()
 
-    //wg.Wait()
-    <-timer
-
+    //////////////////////////
     csfS := <-cfs
     kb := (csfS.Size / 1024)
     t2 := time.Now()
@@ -238,6 +251,9 @@ func SendFileDo(pf, pbucket string, s3Client *s3.S3, wg *sync.WaitGroup) {
     fmt.Print("\r")
     fmt.Print("\033[?25h")
     fmt.Print("\033[?25h")
+    /////////////////////////////
+
+    // done..
     return
 }
 
