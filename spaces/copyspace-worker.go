@@ -12,7 +12,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
-	"sync"
+	//"sync"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -24,12 +24,13 @@ import (
 
 const (
 	ACL  = "public-read-write"
-	ACLp = "private"
+	ACLp = "public"
 )
 
 var (
 	ACL_AP = ACL
 	BUCKET = ""
+	WORKER = "500"
 )
 
 // -ldflags "-X main.k=your-key -X main.s=your-secret" main.go
@@ -81,6 +82,7 @@ func main() {
 	flag.StringVar(&pathFile, "file", "", "nome do arquivo ou diretorio a ser enviado")
 	aclSend := flag.String("acl", "", "permissao: public or private")
 	fbucket := flag.String("bucket", "", "o nome do seu bucket")
+	workers := flag.String("worker", "", "quantidade de trabalhos concorrentes em sua máquina")
 	flag.Parse()
 
 	if len(pathFile) == 0 {
@@ -88,7 +90,7 @@ func main() {
 		return
 	}
 
-	if len(*aclSend) > 0 && *aclSend != "public" {
+	if len(*aclSend) > 0 && strings.ToLower(*aclSend) != "private" {
 		ACL_AP = ACLp
 	}
 
@@ -98,10 +100,15 @@ func main() {
 		BUCKET = bucket
 	}
 
-	var wg sync.WaitGroup
+	if len(*workers) > 0 {
+		WORKER = *workers
+	}
+
+	// var wg sync.WaitGroup
 
 	if DirExist(pathFile) {
 
+		workeri, _ := strconv.Atoi(WORKER)
 		jobs := make(chan sendS3)
 		results := make(chan string)
 		//done := make(chan string, 1)
@@ -110,7 +117,7 @@ func main() {
 		var i int
 		//wg.Add(5)
 		// inicia o worker
-		for w := 1; w <= 500; w++ {
+		for w := 1; w <= workeri; w++ {
 			go worker(w, jobs, results)
 		}
 
@@ -140,7 +147,7 @@ func main() {
 			}
 		}(i)
 
-		wg.Wait()
+		// wg.Wait()
 
 		defer close(jobs)
 		defer close(results)
