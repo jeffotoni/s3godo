@@ -24,7 +24,7 @@ import (
 
 const (
 	ACL  = "public-read-write"
-	ACLp = "public"
+	ACLp = "public-read-write"
 )
 
 var (
@@ -104,6 +104,9 @@ func main() {
 		WORKER = *workers
 	}
 
+	println(CyanCor("domain: " + endpoint))
+	println(YellowCor("bucket: " + BUCKET))
+
 	// var wg sync.WaitGroup
 
 	if DirExist(pathFile) {
@@ -167,9 +170,8 @@ func main() {
 		// bucket
 		pbucket := strings.Replace(pathFile, os.Getenv("HOME"), "", -1)
 		p := pathFile
-
 		//wg.Add(1)
-		SendFileDo(p, pbucket, s3Client, 1) // send one file
+		fmt.Println(SendFileDo(p, pbucket, s3Client, 1)) // send one file
 		//wg.Wait()
 	}
 }
@@ -281,7 +283,8 @@ func SendFileDo(pf, pbucket string, s3Client *s3.S3, I int) string {
 	kb := (csfS.Size / 1024)
 	t2 := time.Now()
 
-	msgReturn = "\r\033[?25h" + "[send success] count[" + strconv.Itoa(I) + "] Id[" + *csfS.Msgs3 + "] File[" + pbucket + "/" + csfS.Name + "] Size[" + strconv.FormatInt(kb, 10) + "Kb]" + "time[" + t2.Sub(t1).String() + "]"
+	sendMsgCor := YellowCor("\r\033[?25h" + "[send success]")
+	msgReturn = sendMsgCor + " count[" + strconv.Itoa(I) + "] Id[" + *csfS.Msgs3 + "] File[" + pbucket + "/" + csfS.Name + "] Size[" + strconv.FormatInt(kb, 10) + "Kb]" + "time[" + t2.Sub(t1).String() + "]"
 	msgReturn += "\r\033[?25h\033[?25h"
 
 	//fmt.Print("\r")
