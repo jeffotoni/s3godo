@@ -56,7 +56,6 @@ func main() {
 ## DROPLET
 
 ```go
-
 ...
 mt.Println("Create new Droplet.")
 dropletName := "super-cool-dit10-droplet"
@@ -72,7 +71,6 @@ createRequest := &godo.DropletCreateRequest{
 		},
 	}
 ...
-
 ```
 
 ## SPACES
@@ -82,6 +80,21 @@ in the simple space will find the source of the copyspace a program that will se
 
 To access space, we will not use godo to use sdk aws.
 in the simple space will find the source of the copyspace a program that will send files to the space.
+
+
+### Install with wget
+
+You need to set up a hidden file with the name of .dokeys in your $HOME or ~/.dokeys
+Without it nothing will work, to generate the keys you need at 
+digitalocean.com in API -> Spaces access keys and generate your key.
+
+```bash
+
+$ sh -c "$(wget https://raw.githubusercontent.com/jeffotoni/s3godo/master/spaces/v1/install.sh -O -)"
+
+```
+
+### Install manual
 
 For copyspace to work you need to generate a json file with the hidden .dokeys name in your $HOME, and its contents are:
 
@@ -101,6 +114,8 @@ The bucket field is not required, and the keys you will be able to generate from
 It is now install and use.
 
 ```bash
+$ git clone https://github.com/jeffotoni/s3godo.git
+$ cd s3godo/space
 $ go install
 
 # The parameters are:
@@ -109,11 +124,3 @@ $ go install
 # bucket: the name of your bucket
 $ copyspace --file = your-file.pdf --acl = public --bucket = your-bucket
 ```
-
-### Install with wget
-
-You need to set up a hidden file with the name of .dokeys in your $HOME or ~/.dokeys
-Without it nothing will work, to generate the keys you need at 
-digitalocean.com in API -> Spaces access keys and generate your key.
-
-$ sh -c "$(wget https://raw.githubusercontent.com/jeffotoni/s3godo/master/spaces/v1/install.sh -O -)"
