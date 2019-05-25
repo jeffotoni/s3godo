@@ -5,5 +5,6 @@ sudo wget https://github.com/jeffotoni/s3godo/tree/master/spaces/v1/copyspace -P
 sudo ln -s /opt/dospace/v1/copysapce /usr/bin/copyspace
 sudo chmod 775 /usr/bin/copyspace
 
-echo "Obrigado por baixar! Para usar, basta executar: copyspace -h"
-echo "Thanks for download! Use command: copyspace -h"
+
+echo "\033[0;33m######### Thanks for Download ##########\033[0m"
+echo "copyspace -h"
