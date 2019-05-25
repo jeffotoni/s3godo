@@ -3,14 +3,26 @@
 DIR=/opt/dospace/v2
 DIR2=/opt/dospace
 EXEC=copyspace
+DOKEYS=$HOME/.dokeys
 
-echo "{
+if [ -e "$DOKEYS" ] ; then
+echo "\033[0;32m#########################################################\033[0m"
+echo "\033[0;33mConferindo o arquivo de configuração dokeys\033[0m"
+echo "\033[0;33mOk .dokeys existe!\033[0m"
+echo "\033[0;32m#########################################################\033[0m"
+else
+echo '{
      "key": "key-digitalocean",
      "secret": "secret-digitalocean",
      "endpoint": "https://your-space.digitaloceanspaces.com",
      "region": "us-east-1",
      "bucket": "your-bucket-default"
-}" > $HOME/.dokeys
+}' > $HOME/.dokeys
+echo "\033[0;32m#########################################################\033[0m"
+echo "criado ~/.dokeys"
+echo "\033[0;32m#########################################################\033[0m"
+fi
+
 
 sudo rm -rf $DIR
 sudo mkdir -p $DIR
