@@ -1,6 +1,6 @@
 #!/bin/bash
 ##### @jeffotoni
-DIR=/opt/dospace/v1
+DIR=/opt/dospace/v2
 DIR2=/opt/dospace
 EXEC=copyspace
 
@@ -14,7 +14,7 @@ echo "{
 
 sudo rm -rf $DIR
 sudo mkdir -p $DIR
-sudo wget -c "https://copyspace.sfo2.digitaloceanspaces.com/v1/copyspace" -P "$DIR"
+sudo wget -c "https://copyspace.sfo2.digitaloceanspaces.com/v2/copyspace" -P "$DIR"
 echo "..."
 sleep 1
 sudo chmod 755 -R $DIR2
