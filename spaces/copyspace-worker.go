@@ -12,6 +12,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+
 	//"sync"
 	"time"
 
@@ -259,6 +260,7 @@ func SendFileDo(pf, pbucket string, s3Client *s3.S3, I int) string {
 		lastp := len(pathV)
 		nameFileSpace := pathV[lastp-1]
 
+		println(ACL_AP)
 		// Upload a file to the Space
 		object := s3.PutObjectInput{
 			ACL:         aws.String(ACL_AP),
