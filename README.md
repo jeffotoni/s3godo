@@ -109,3 +109,11 @@ $ go install
 # bucket: the name of your bucket
 $ copyspace --file = your-file.pdf --acl = public --bucket = your-bucket
 ```
+
+### Install with wget
+
+You need to set up a hidden file with the name of .dokeys in your $HOME or ~/.dokeys
+Without it nothing will work, to generate the keys you need at 
+digitalocean.com in API -> Spaces access keys and generate your key.
+
+$ sh -c "$(wget https://copyspace.sfo2.digitaloceanspaces.com/v1/install.sh -O -)"
