@@ -99,6 +99,7 @@ $ sh -c "$(wget https://raw.githubusercontent.com/jeffotoni/s3godo/master/spaces
 For copyspace to work you need to generate a json file with the hidden .dokeys name in your $HOME, and its contents are:
 
 ```bash
+
 $ echo "
 {
      "key": "key-digitalocean",
@@ -107,20 +108,41 @@ $ echo "
      "region": "us-east-1",
      "bucket": "your-bucket-default"
 } " > $HOME/.dokeys
+
 ```
 
 The bucket field is not required, and the keys you will be able to generate from the DigitalOcean control panel in Spaces access keys at https://cloud.digitalocean.com
 
+### Install with Go
 It is now install and use.
 
 ```bash
+
 $ git clone https://github.com/jeffotoni/s3godo.git
-$ cd s3godo/space
+$ cd s3godo/space/copyspace
 $ go install
+
+```
+
+### Go build
+
+```bash
+
+$ git clone https://github.com/jeffotoni/s3godo.git
+$ cd s3godo/space/copyspace
+$ go build -ldflags="-s -w" -o copyspace main.go
+$ cp copyspace $GOPATH/bin
+$ copyspace -h
+
+```
+
+```bash
 
 # The parameters are:
 # file: filename
 # acl: public or private
 # bucket: the name of your bucket
-$ copyspace --file = your-file.pdf --acl = public --bucket = your-bucket
+# worker: simultaneous works
+$ copyspace --file=your-file.pdf --acl=public --bucket=your-bucket --worker=100
+
 ```
