@@ -116,4 +116,4 @@ You need to set up a hidden file with the name of .dokeys in your $HOME or ~/.do
 Without it nothing will work, to generate the keys you need at 
 digitalocean.com in API -> Spaces access keys and generate your key.
 
-$ sh -c "$(wget https://copyspace.sfo2.digitaloceanspaces.com/v1/install.sh -O -)"
+$ sh -c "$(wget https://raw.githubusercontent.com/jeffotoni/s3godo/master/spaces/v1/install.sh -O -)"
