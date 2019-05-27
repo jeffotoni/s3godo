@@ -24,7 +24,7 @@ import (
 var (
 	BUCKET   = ""
 	WORKER   = 500 // quantidade de workers trabalhando simultaneamente
-	ACL_S3   = "public-read-write"
+	ACL_S3   = "private"
 	HOME_DIR = ""
 )
 
@@ -76,7 +76,7 @@ func main() {
 	var workers int
 
 	flag.StringVar(&pathFile, "file", "", "nome do arquivo ou diretorio a ser enviado")
-	aclSend := flag.String("acl", "", "permissao: public or private")
+	aclSend := flag.String("acl", "private", "permissao: public or private")
 	fbucket := flag.String("bucket", "", "o nome do seu bucket")
 	flag.IntVar(&workers, "worker", WORKER, "quantidade de trabalhos concorrentes em sua máquina")
 	flag.Parse()
@@ -93,8 +93,8 @@ func main() {
 		return
 	}
 
-	if len(*aclSend) > 0 && strings.ToLower(*aclSend) == "private" {
-		ACL_S3 = "private"
+	if len(*aclSend) > 0 && strings.ToLower(*aclSend) == "public" {
+		ACL_S3 = "public-read-write"
 	}
 
 	if len(*fbucket) > 0 {
