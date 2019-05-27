@@ -90,7 +90,11 @@ digitalocean.com in API -> Spaces access keys and generate your key.
 
 ```bash
 
+<<<<<<< HEAD
 $ sh -c "$(wget https://raw.githubusercontent.com/jeffotoni/s3godo/master/spaces/copyspace/v1/install.sh -O -)"
+=======
+$ sh -c "https://raw.githubusercontent.com/jeffotoni/s3godo/master/spaces/copyspace/v1/install.sh -O -)"
+>>>>>>> 63d1acc0ea2bb213bc627e8c25bee677d327e238
 
 ```
 
