@@ -53,8 +53,8 @@ func main() {
 	if len(os.Args) < 4 {
 
 		fmt.Println("Ex:")
-		fmt.Println("$copyobject cp do://bucket/dir1/dir2/dir3/file.pdf .")
-		fmt.Println("$copyobject cp do://bucket/dir1/dir2/dir3/file.pdf /tmp/file.pdf")
+		fmt.Println("$ copyobject cp do://bucket/dir1/dir2/dir3/file.pdf .")
+		fmt.Println("$ copyobject cp do://bucket/dir1/dir2/dir3/file.pdf /tmp/file.pdf")
 		return
 	}
 
