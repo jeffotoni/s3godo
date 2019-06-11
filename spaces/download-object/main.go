@@ -4,16 +4,18 @@ import (
 	"encoding/json"
 
 	"fmt"
+
 	"github.com/aws/aws-sdk-go/aws"
+
+	"io/ioutil"
+	"os"
+	"os/user"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
-	"io/ioutil"
-	"os"
-	"os/user"
-	"strings"
 )
 
 var (
@@ -110,10 +112,12 @@ func main() {
 	pathMkdir := strings.Join(dest[0:lenght], "/")
 	fmt.Println("destino local:: ", pathMkdir)
 	fmt.Println("key bucket:: ", destino)
-
-	if err := os.MkdirAll(pathMkdir, 0755); err != nil {
-		fmt.Println("Erro ao criar diretorio: ", err)
-		return
+	println(pathMkdir)
+	if len(pathMkdir) > 0 && pathMkdir != "." {
+		if err := os.MkdirAll(pathMkdir, 0755); err != nil {
+			fmt.Println("Erro ao criar diretorio: ", err)
+			return
+		}
 	}
 
 	// config
