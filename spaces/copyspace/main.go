@@ -160,11 +160,6 @@ func main() {
 	close(jobs)
 	println("fim de envio")
 
-	// defer close(jobs)
-	// defer close(results)
-	// for cx := range results {
-	// 	println(cx)
-	// }
 	return
 }
 
@@ -172,7 +167,6 @@ func worker(ctx context.Context, wg *sync.WaitGroup, jobs <-chan sendS3) {
 	for {
 		select {
 		case j := <-jobs:
-			time.Sleep(time.Millisecond * 2)
 			SendFileDO(j)
 		case <-ctx.Done():
 			wg.Done()
